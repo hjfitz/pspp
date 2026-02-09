@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hjfitz/pspp/internal/http"
@@ -9,10 +10,11 @@ import (
 	"go.uber.org/zap"
 )
 
-const PROXY_HOST = "http://localhost:3000"
 const SUBSCRIPTION = "projects/local/subscriptons/mocked"
 
 func main() {
+	host := os.Args[3]
+
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = io.Discard
 	r := gin.Default()
@@ -22,11 +24,7 @@ func main() {
 	l := logger.Sugar()
 
 	ps := pubsub.NewPubsub(SUBSCRIPTION)
-	handler := http.NewProxyHandler(
-		PROXY_HOST,
-		ps,
-		l,
-	)
+	handler := http.NewProxyHandler(host, ps, l)
 
 	r.Use(handler.Handle)
 
