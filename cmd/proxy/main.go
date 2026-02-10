@@ -2,9 +2,9 @@ package main
 
 import (
 	"io"
-	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hjfitz/pspp/internal/args"
 	"github.com/hjfitz/pspp/internal/http"
 	"github.com/hjfitz/pspp/internal/pubsub"
 	"go.uber.org/zap"
@@ -13,7 +13,7 @@ import (
 const SUBSCRIPTION = "projects/local/subscriptons/mocked"
 
 func main() {
-	host := os.Args[3]
+	opts := args.GetOpts()
 
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = io.Discard
@@ -24,7 +24,7 @@ func main() {
 	l := logger.Sugar()
 
 	ps := pubsub.NewPubsub(SUBSCRIPTION)
-	handler := http.NewProxyHandler(host, ps, l)
+	handler := http.NewProxyHandler(opts.Upstream, ps, l)
 
 	r.Use(handler.Handle)
 
