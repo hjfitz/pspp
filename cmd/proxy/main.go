@@ -39,6 +39,7 @@ func main() {
 
 	r.Use(handler.Handle)
 
+	l.Info().Msg("Starting server")
 	addr := fmt.Sprintf(":%s", opts.Port)
 	if err := r.Run(addr); err != nil {
 		l.Error().Err(err).Msg("failed to run server")

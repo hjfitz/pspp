@@ -43,7 +43,8 @@ func (p *ProxyHandler) Handle(ctx *gin.Context) {
 	if err != nil {
 		p.Logger.Error().Err(err).Msg("unable to post upstream")
 	}
-	p.Logger.Log().Str("path", path).Str("upstream", upstream).Msg("Request handled")
+
+	p.Logger.Info().Str("path", path).Str("upstream", upstream).Msg("Request handled")
 
 	status := resp.StatusCode
 	defer resp.Body.Close()
