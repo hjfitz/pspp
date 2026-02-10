@@ -9,19 +9,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hjfitz/pspp/internal/pubsub"
-	"go.uber.org/zap"
+	"github.com/rs/zerolog"
 )
 
 type ProxyHandler struct {
 	Host   string
 	Pubsub pubsub.PubSub
-	Logger *zap.SugaredLogger
+	Logger zerolog.Logger
 }
 
 func NewProxyHandler(
 	host string,
 	pubsub pubsub.PubSub,
-	logger *zap.SugaredLogger,
+	logger zerolog.Logger,
 ) ProxyHandler {
 	return ProxyHandler{
 		Host:   host,
@@ -39,18 +39,16 @@ func (p *ProxyHandler) Handle(ctx *gin.Context) {
 	reqPayload, _ := json.Marshal(payload)
 	buf := bytes.NewBuffer(reqPayload)
 
-	_, err := http.Post(upstream, "application/json", buf)
+	resp, err := http.Post(upstream, "application/json", buf)
 	if err != nil {
-		p.Logger.Errorw("unable to post upstream",
-			"err", err,
-		)
+		p.Logger.Error().Err(err).Msg("unable to post upstream")
 	}
-	p.Logger.Infow("Request handled",
-		"path", path,
-		"upstream", upstream,
-		"payload", string(reqPayload),
-	)
+	p.Logger.Log().Str("path", path).Str("upstream", upstream).Msg("Request handled")
 
-	// todo: proxy response
-	ctx.JSON(http.StatusOK, gin.H{"text": "ok"})
+	status := resp.StatusCode
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	ct := resp.Header.Get("content-type")
+
+	ctx.Data(status, ct, body)
 }
